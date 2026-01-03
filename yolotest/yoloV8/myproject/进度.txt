@@ -3,3 +3,7 @@
 
 录制ros2bag的指令：
 ros2 bag record -o my_d435i_bag /camera/color/image_raw /camera/depth/image_rect_raw /camera/color/camera_info
+
+1.4
+ros2在python环境下运行，问题比较多，所以考虑转成录制视频+发送位置请求的方式来离线处理
+因为yolo可以接入到ros2中，暂时可以留作后续的优化部分内容
