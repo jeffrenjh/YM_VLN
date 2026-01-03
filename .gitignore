@@ -1,0 +1,37 @@
+# Python cache and envs
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+.venv
+env/
+venv/
+
+# IDE/editor
+.vscode/
+.idea/
+*.log
+
+# Packaging/build
+build/
+dist/
+*.egg-info/
+
+# Checkpoints and large weights
+*.pt
+*.pth
+*.onnx
+*.weights
+*.engine
+
+# YOLO project folders to keep local
+/yolotest/yoloV8/main/
+/yolotest/yoloV8/models/
+/yolotest/yoloV8/realsenseYolo/
+
+# YOLO runs and datasets (regenerate)
+/yolotest/yoloV8/main/ultralytics/runs/
+/yolotest/yoloV8/main/ultralytics/datasets/
+
+# OS noise
+.DS_Store
