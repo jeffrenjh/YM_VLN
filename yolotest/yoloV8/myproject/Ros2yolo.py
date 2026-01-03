@@ -32,6 +32,16 @@ class ROS2BagReader:
 
         self.camera_info = None
         self.depth_scale = 0.001  # 默认深度比例
+        
+        # 获取 topic 类型映射
+        self.topic_types = {}
+        topic_types_list = self.reader.get_all_topics_and_types()
+        for topic_metadata in topic_types_list:
+            self.topic_types[topic_metadata.name] = topic_metadata.type
+        
+        print("Available topics in bag file:")
+        for topic, msg_type in self.topic_types.items():
+            print(f"  {topic}: {msg_type}")
 
     def get_next_frame(self):
         """从bag文件读取下一帧"""
@@ -40,8 +50,12 @@ class ROS2BagReader:
 
         while self.reader.has_next():
             topic, data, timestamp = self.reader.read_next()
-
-            msg_type = get_message(topic)
+            
+            # 根据 topic 获取消息类型
+            if topic not in self.topic_types:
+                continue
+                
+            msg_type = get_message(self.topic_types[topic])
             msg = deserialize_message(data, msg_type)
 
             if topic == self.color_topic:
