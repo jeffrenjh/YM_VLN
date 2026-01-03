@@ -1,2 +1,2 @@
 1.3
-写成能够跑rosbag的yolo目标检测代码
+写成能够跑ros2bag的yolo目标检测代码
