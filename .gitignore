@@ -35,3 +35,7 @@ dist/
 
 # OS noise
 .DS_Store
+
+# Custom ignores
+data/
+进度.txt
