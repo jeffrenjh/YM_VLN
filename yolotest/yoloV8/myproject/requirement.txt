@@ -1,0 +1,14 @@
+# realsense
+pip install numpy opencv-python
+pip install pyrealsense2 # Stable
+
+
+# Install all packages together using conda
+# 1. 安装PyTorch 2.x + torchvision（适配CUDA 11.8）
+pip install torch==2.0.1 torchvision==0.15.2 torchaudio==2.0.2 
+
+# 2. 安装ultralytics（YOLOv8核心库）
+pip install ultralytics
+
+#临时指定源
+-i https://mirrors.aliyun.com/pypi/simple/
