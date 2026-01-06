@@ -60,40 +60,45 @@ def process_image_pair(color_path, depth_path, output_path=None):
                         [225, 255, 255], thickness=2, lineType=cv2.LINE_AA)  # 标出坐标
     
     # 保存点云数据
-    if output_path and point_cloud_data_all:
-        os.makedirs(output_path, exist_ok=True)
-        base_name = Path(color_path).stem
-        point_cloud_file = os.path.join(output_path, f"{base_name}_pointcloud.txt")
-        with open(point_cloud_file, "w") as file:
-            file.write(f"Image: {color_path}\n")
-            file.write(f"Time: {time.time()}\n")
-            file.write(" ".join(point_cloud_data_all))
-        print(f"[INFO] 点云数据已保存: {point_cloud_file}")
+    # if output_path and point_cloud_data_all:
+    #     os.makedirs(output_path, exist_ok=True)
+    #     base_name = Path(color_path).stem
+    #     point_cloud_file = os.path.join(output_path, f"{base_name}_pointcloud.txt")
+    #     with open(point_cloud_file, "w") as file:
+    #         file.write(f"Image: {color_path}\n")
+    #         file.write(f"Time: {time.time()}\n")
+    #         file.write(" ".join(point_cloud_data_all))
+    #     print(f"[INFO] 点云数据已保存: {point_cloud_file}")
     
     return annotated_frame
 
 def process_dataset(input_path, output_path=None, show_preview=True):
     """
     批量处理数据集中的图像
+    支持 collect2.py 采集的数据格式: color_XXXXXX.png 和 depth_XXXXXX.png
     """
-    # 查找所有 color 图像
-    color_files = sorted(Path(input_path).glob("*_color.jpg"))
+    # 查找所有 color 图像 (支持 collect2.py 的命名格式: color_000001.png)
+    color_files = sorted(Path(input_path).glob("color_*.png"))
     
     if not color_files:
         print(f"[ERROR] 在 {input_path} 中未找到图像文件")
+        print(f"[INFO] 期望的文件格式: color_XXXXXX.png")
         return
     
-    print(f"[INFO] 找到 {len(color_files)} 张图像")
+    print(f"[INFO] 找到 {len(color_files)} 张彩色图像")
     
     for color_path in color_files:
-        # 构建对应的 depth 图像路径
-        depth_path = str(color_path).replace("_color.jpg", "_depth.png")
+        # 从 color_000001.png 提取编号，构建对应的 depth 图像路径
+        # color_path.stem = "color_000001"
+        frame_number = color_path.stem.replace("color_", "")
+        depth_filename = f"depth_{frame_number}.png"
+        depth_path = os.path.join(input_path, depth_filename)
         
         if not os.path.exists(depth_path):
             print(f"[WARN] 未找到对应的深度图: {depth_path}")
             continue
         
-        print(f"[INFO] 处理: {color_path.name}")
+        print(f"[INFO] 处理: {color_path.name} <-> {depth_filename}")
         
         # 处理图像对
         annotated_frame = process_image_pair(str(color_path), depth_path, output_path)
@@ -101,7 +106,8 @@ def process_dataset(input_path, output_path=None, show_preview=True):
         if annotated_frame is not None:
             # 保存结果
             if output_path:
-                result_path = os.path.join(output_path, f"{color_path.stem}_result.jpg")
+                os.makedirs(output_path, exist_ok=True)
+                result_path = os.path.join(output_path, f"result_{frame_number}.png")
                 cv2.imwrite(result_path, annotated_frame)
                 print(f"[INFO] 结果已保存: {result_path}")
             

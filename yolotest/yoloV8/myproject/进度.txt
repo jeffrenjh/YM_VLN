@@ -13,3 +13,14 @@ ros2在python环境下运行，问题比较多，所以考虑转成录制视频+
 好像也是不太好搞，png深度图，jpg格式rgb这样子
 思考一番：如果离线的不太好，就直接实时的，然后把检测到的存到一个文件里，后面再根据标定来转成全局坐标？
 感觉可以，具体采集过程：先不要太复杂，从固定的几个位置出发，可以自己决定是否开启坐标转换的功能
+
+
+1.6
+发现了bug【在调用 cv2.cvtColor() 函数时，传入的 color_img 不是有效的 NumPy 数组
+（OpenCV 要求的格式），导致颜色空间转换失败。】的真正原因：
+conda环境的冲突问题，重装就可以正确采集图像了
+
+运行yolo识别离线图像：
+# 如果需要保存结果
+python yolo_images.py --input /home/nvidia/huangjie/YM_VLN/test/YM_VLN/yolotest/yoloV8/myproject/data/0106task1 
+--output /home/nvidia/huangjie/YM_VLN/test/YM_VLN/yolotest/yoloV8/myproject/data/0106task1_results
