@@ -37,5 +37,6 @@ dist/
 .DS_Store
 
 # Custom ignores
+models/
 data/
 /yolotest\yoloV8\myproject\进度.txt

@@ -1,0 +1,16 @@
+
+0108
+启动llm服务器
+python3 -m vllm.entrypoints.openai.api_server --model /home/nvidia/huangjie/YM_VLN/test/YM_VLN/vllm/models/Qwen3-0.6B --host 0.0.0.0 --port 8080 --dtype auto --max-num-seqs 32 --max-model-len 4096 --tensor-parallel-size 1 --trust-remote-code
+
+
+发送请求指令：
+curl http://localhost:8080/v1/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "/home/nvidia/huangjie/YM_VLN/test/YM_VLN/vllm/models/Qwen3-0.6B",
+    "prompt": "请给我找一个红色的凳子,这是一个指令，请从这个指令中提取出目标物是什么，并给出对应的英文",
+    "max_tokens": 512
+  }'
+
+前端拉不起来，vite的问题？，llm的部分基本是没有问题了
