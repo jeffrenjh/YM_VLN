@@ -24,3 +24,11 @@ conda环境的冲突问题，重装就可以正确采集图像了
 # 如果需要保存结果
 python yolo_images.py --input /home/nvidia/huangjie/YM_VLN/test/YM_VLN/yolotest/yoloV8/myproject/data/0106task1 
 --output /home/nvidia/huangjie/YM_VLN/test/YM_VLN/yolotest/yoloV8/myproject/data/0106task1_results
+
+
+1.25
+写标定的代码，采取的是物理测量，先把功能跑起来先
+imu2euler.py和imutest是我从网上找到的一些代码，能跑起来，但感觉有累积的误差，另外，我暂时没有确定是否结果正确
+代码来源：
+https://github.com/realsenseai/librealsense/issues/4391
+https://blog.csdn.net/qq_41204464/article/details/148840225
