@@ -1,4 +1,35 @@
 # 用于实现相机-小车中心标定
+"""
+坐标系定义说明：
+===============
+
+1. 相机坐标系（RealSense 标准，与 testyolo.py 一致）：
+   - X 轴：指向右侧（从相机视角看）
+   - Y 轴：指向下方
+   - Z 轴：指向前方（相机光轴方向，深度方向）
+   - 原点：相机光学中心
+   
+2. 小车底盘坐标系（常见机器人坐标系）：
+   - X 轴：指向小车前方
+   - Y 轴：指向小车左侧
+   - Z 轴：指向上方
+   - 原点：小车底盘中心
+   
+3. 标定参数说明：
+   - (x, y, z)：相机光学中心相对于小车底盘中心的位置偏移
+     * x: 小车前后方向的偏移（正值表示相机在小车前方）
+     * y: 小车左右方向的偏移（正值表示相机在小车左侧）
+     * z: 小车上下方向的偏移（正值表示相机在小车上方）
+   
+   - (yaw, pitch, roll)：相机相对于小车底盘的姿态角（单位：弧度）
+     * yaw: 绕 Z 轴旋转（偏航角），正值表示逆时针旋转
+     * pitch: 绕 Y 轴旋转（俯仰角），正值表示抬头，负值表示低头
+     * roll: 绕 X 轴旋转（横滚角），正值表示向右倾斜
+     
+4. 使用示例：
+   假设相机安装在小车前方 30cm，高度 50cm，向下俯仰 30 度：
+   CameraCalibration(x=0.3, y=0.0, z=0.5, yaw=0.0, pitch=np.radians(-30), roll=0.0)
+"""
 import numpy as np
 
 
@@ -135,11 +166,20 @@ class CameraCalibration:
     
     def __str__(self):
         """打印标定信息"""
-        return (f"相机标定参数:\n"
+        coord_system_info = (
+            "=" * 60 + "\n"
+            "坐标系说明:\n"
+            "  相机坐标系 (RealSense): X-右, Y-下, Z-前\n"
+            "  底盘坐标系 (Robot):    X-前, Y-左, Z-上\n"
+            "=" * 60 + "\n"
+        )
+        return (coord_system_info +
+                f"相机标定参数:\n"
                 f"  位置 (x, y, z): ({self.x:.3f}, {self.y:.3f}, {self.z:.3f}) m\n"
                 f"  姿态 (yaw, pitch, roll): ({np.degrees(self.yaw):.2f}°, "
                 f"{np.degrees(self.pitch):.2f}°, {np.degrees(self.roll):.2f}°)\n"
-                f"变换矩阵:\n{self.transform_matrix}")
+                f"\n变换矩阵 (4x4 齐次变换矩阵):\n{self.transform_matrix}\n" +
+                "=" * 60)
 
 
 # 便捷函数
