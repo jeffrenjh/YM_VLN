@@ -1,3 +1,4 @@
+#本来想接到ros里的，发现比较麻烦，直接放弃了
 import cv2
 import time
 import numpy as np

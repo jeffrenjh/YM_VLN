@@ -63,7 +63,8 @@ def get_default_camera_intrinsics():
 def main():
     # 设置路径
     project_dir = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.join(project_dir, 'data')
+    #data_dir = os.path.join(project_dir, 'data')
+    data_dir = '/home/nvidia/huangjie/YM_VLN/test/YM_VLN/yolotest/yoloV8/myproject/data/0106task1'
     color_image_path = os.path.join(data_dir, 'color_000001.png')
     depth_image_path = os.path.join(data_dir, 'depth_000001.png')
     
@@ -102,24 +103,9 @@ def main():
     # 加载 YOLO 模型
     print("\n正在加载 YOLO 模型...")
     # 尝试多个可能的模型路径
-    model_paths = [
-        "/home/nvidia/huangjie/YM_VLN/yolotest/yoloV8/models/yolov8x.pt",
-        "yolov8n.pt",  # 使用小模型作为备份
-        "yolov8s.pt"
-    ]
+    #model_paths = "/home/nvidia/huangjie/YM_VLN/yolotest/yoloV8/models/yolov8x.pt"
     
-    model = None
-    for model_path in model_paths:
-        try:
-            model = YOLO(model_path)
-            print(f"成功加载模型: {model_path}")
-            break
-        except:
-            continue
-    
-    if model is None:
-        print("错误：无法加载 YOLO 模型，请确保模型文件存在")
-        return
+    model = YOLO("/home/nvidia/huangjie/YM_VLN/test/YM_VLN/yolotest/yoloV8/models/yolov8l.pt")
     
     # 进行目标检测
     print("\n正在进行目标检测...")
