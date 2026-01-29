@@ -4,8 +4,9 @@
 1. 实时从 RealSense 相机获取 RGBD 数据
 2. 使用 YOLO 进行目标检测
 3. 估计目标的 XYZ 坐标（相机坐标系）
-4. 将坐标转换到小车底盘坐标系
-5. 可选保存检测结果（图像和坐标数据）
+4. 将坐标转换到小车底盘坐标系（base_link）
+5. 将坐标转换到全局坐标系（map）
+6. 可选保存检测结果（图像和坐标数据）
 """
 
 import cv2
@@ -18,6 +19,47 @@ import argparse
 from datetime import datetime
 from ultralytics import YOLO
 from calibration import CameraCalibration
+
+
+def chassis_to_global(chassis_coord):
+    """
+    将底盘坐标系的坐标转换到全局坐标系（map）
+    
+    变换链: base_link -> odom -> map
+    - odom <- base_link: 平移 (-5.270, -1.117, 0), yaw 2.986 rad
+    - map <- odom: 平移 (0.540, 1.102, 0), yaw -0.059 rad
+    
+    参数:
+        chassis_coord: numpy数组 [x, y, z] 底盘坐标系下的坐标
+    
+    返回:
+        全局坐标系下的坐标 [x, y, z]
+    """
+    # TF参数: base_link -> odom
+    base_to_odom_trans = np.array([-5.270, -1.117, 0.0])
+    base_to_odom_yaw = 2.986
+    
+    # TF参数: odom -> map
+    odom_to_map_trans = np.array([0.540, 1.102, 0.0])
+    odom_to_map_yaw = -0.059
+    
+    # 第一步: base_link -> odom
+    # 旋转
+    cos_yaw1 = np.cos(base_to_odom_yaw)
+    sin_yaw1 = np.sin(base_to_odom_yaw)
+    x_odom = cos_yaw1 * chassis_coord[0] - sin_yaw1 * chassis_coord[1] + base_to_odom_trans[0]
+    y_odom = sin_yaw1 * chassis_coord[0] + cos_yaw1 * chassis_coord[1] + base_to_odom_trans[1]
+    z_odom = chassis_coord[2] + base_to_odom_trans[2]
+    
+    # 第二步: odom -> map
+    # 旋转
+    cos_yaw2 = np.cos(odom_to_map_yaw)
+    sin_yaw2 = np.sin(odom_to_map_yaw)
+    x_map = cos_yaw2 * x_odom - sin_yaw2 * y_odom + odom_to_map_trans[0]
+    y_map = sin_yaw2 * x_odom + cos_yaw2 * y_odom + odom_to_map_trans[1]
+    z_map = z_odom + odom_to_map_trans[2]
+    
+    return np.array([x_map, y_map, z_map])
 
 
 class YOLOCalibrationSystem:
@@ -223,6 +265,9 @@ class YOLOCalibrationSystem:
                             # 将相机坐标系转换为小车底盘坐标系
                             chassis_coord = self.calibration.camera_to_chassis(camera_coord)
                             
+                            # 将底盘坐标系转换为全局坐标系（map）
+                            global_coord = chassis_to_global(chassis_coord)
+                            
                             # 存储检测数据
                             detection_info = {
                                 'id': i + 1,
@@ -240,6 +285,11 @@ class YOLOCalibrationSystem:
                                     'x': float(chassis_coord[0]),
                                     'y': float(chassis_coord[1]),
                                     'z': float(chassis_coord[2])
+                                },
+                                'global_coord': {
+                                    'x': float(global_coord[0]),
+                                    'y': float(global_coord[1]),
+                                    'z': float(global_coord[2])
                                 }
                             }
                             detections_data['detections'].append(detection_info)
@@ -250,18 +300,25 @@ class YOLOCalibrationSystem:
                             # 标注相机坐标系坐标（青色）
                             camera_text = f"Cam: ({camera_coord[0]:.2f}, {camera_coord[1]:.2f}, {camera_coord[2]:.2f})m"
                             cv2.putText(annotated_frame, camera_text, (ux + 20, uy), 
-                                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, [255, 255, 0], 
-                                       thickness=2, lineType=cv2.LINE_AA)
+                                       cv2.FONT_HERSHEY_SIMPLEX, 0.4, [255, 255, 0], 
+                                       thickness=1, lineType=cv2.LINE_AA)
                             
                             # 标注底盘坐标系坐标（绿色）
-                            chassis_text = f"Chassis: ({chassis_coord[0]:.2f}, {chassis_coord[1]:.2f}, {chassis_coord[2]:.2f})m"
-                            cv2.putText(annotated_frame, chassis_text, (ux + 20, uy + 25), 
-                                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, [0, 255, 0], 
-                                       thickness=2, lineType=cv2.LINE_AA)
+                            chassis_text = f"Base: ({chassis_coord[0]:.2f}, {chassis_coord[1]:.2f}, {chassis_coord[2]:.2f})m"
+                            cv2.putText(annotated_frame, chassis_text, (ux + 20, uy + 20), 
+                                       cv2.FONT_HERSHEY_SIMPLEX, 0.4, [0, 255, 0], 
+                                       thickness=1, lineType=cv2.LINE_AA)
+                            
+                            # 标注全局坐标系坐标（粉红色）
+                            global_text = f"Map: ({global_coord[0]:.2f}, {global_coord[1]:.2f}, {global_coord[2]:.2f})m"
+                            cv2.putText(annotated_frame, global_text, (ux + 20, uy + 40), 
+                                       cv2.FONT_HERSHEY_SIMPLEX, 0.4, [255, 0, 255], 
+                                       thickness=1, lineType=cv2.LINE_AA)
                             
                             # 打印到控制台
                             print(f"\n目标 {i+1}: {class_name} (置信度: {conf:.2f})")
                             print(f"  底盘坐标系: X={chassis_coord[0]:.3f}m, Y={chassis_coord[1]:.3f}m, Z={chassis_coord[2]:.3f}m")
+                            print(f"  全局坐标系: X={global_coord[0]:.3f}m, Y={global_coord[1]:.3f}m, Z={global_coord[2]:.3f}m")
                 
                 # 计算并显示 FPS
                 end_time = time.time()
