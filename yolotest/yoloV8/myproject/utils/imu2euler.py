@@ -1,3 +1,4 @@
+# csdn上找的测量方法,演示如何从 IMU 数据直接计算欧拉角（主要用于测试算法原理）
 import pyrealsense2 as rs
 import math
 

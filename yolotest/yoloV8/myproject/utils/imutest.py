@@ -1,3 +1,5 @@
+# ai写的测量方法
+# 读取 RealSense 的加速度计和陀螺仪数据，使用互补滤波算法解算相机的实时姿态（四元数和欧拉角）
 import pyrealsense2 as rs
 import numpy as np
 import threading

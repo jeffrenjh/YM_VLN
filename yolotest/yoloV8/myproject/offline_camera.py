@@ -1,3 +1,4 @@
+# 批量处理文件夹中的所有图像对，运行 YOLO 检测并显示/保存带有点云坐标的检测结果
 import cv2
 import time
 import numpy as np

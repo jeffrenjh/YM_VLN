@@ -1,3 +1,5 @@
+#使用 RealSense 相机进行实时 YOLO 检测，计算物体在相机坐标系下的位置。
+
 import cv2
 import pyrealsense2 as rs
 import time
@@ -6,8 +8,8 @@ import math
 from ultralytics import YOLO
  
 # 加载 YOLOv8 模型
-model = YOLO("/home/nvidia/huangjie/YM_VLN/yolotest/yoloV8/models/yolov8x.pt")
- 
+model = YOLO("/home/nvidia/huangjie/YM_VLN/test/YM_VLN/yolotest/yoloV8/models/yolov8l.pt")
+    
 # # 获取摄像头内容，参数 0 表示使用默认的摄像头
 # cap = cv2.VideoCapture(1)
  
@@ -110,9 +112,9 @@ try:
                     point_cloud_data.append(f"{camera_coordinate} ")
  
             # 一次性写入所有数据
-            with open("point_cloud_data.txt", "a") as file:
-                file.write(f"\nTime: {time.time()}\n")
-                file.write(" ".join(point_cloud_data))
+            # with open("point_cloud_data.txt", "a") as file:
+            #     file.write(f"\nTime: {time.time()}\n")
+            #     file.write(" ".join(point_cloud_data))
  
             # 显示中心点坐标
             ux = int((x1 + x2) / 2)
