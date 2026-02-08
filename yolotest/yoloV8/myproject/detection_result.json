@@ -1,0 +1,86 @@
+{
+    "source_images": {
+        "color": "/home/nvidia/huangjie/YM_VLN/test/YM_VLN/yolotest/yoloV8/myproject/data/0106task1/color_000001.png",
+        "depth": "/home/nvidia/huangjie/YM_VLN/test/YM_VLN/yolotest/yoloV8/myproject/data/0106task1/depth_000001.png"
+    },
+    "camera_intrinsics": {
+        "fx": 615.0,
+        "fy": 615.0,
+        "cx": 424.0,
+        "cy": 240.0,
+        "width": 848,
+        "height": 480
+    },
+    "calibration_params": {
+        "x": 0.3,
+        "y": 0.0,
+        "z": 0.5,
+        "yaw": 0.0,
+        "pitch": -0.5235987755982988,
+        "roll": 0.0
+    },
+    "detections": [
+        {
+            "id": 1,
+            "class": "laptop",
+            "confidence": 0.9681739807128906,
+            "bbox": {
+                "x1": 102,
+                "y1": 23,
+                "x2": 639,
+                "y2": 479
+            },
+            "pixel_coords": {
+                "u": 370,
+                "v": 251
+            },
+            "depth_mm": 421,
+            "camera_coords": {
+                "x": -0.03696585365853658,
+                "y": 0.007530081300813008,
+                "z": 0.421
+            },
+            "chassis_coords": {
+                "x": 0.05748663165912943,
+                "y": 0.007530081300813008,
+                "z": 0.8461137681639804
+            },
+            "global_coords": {
+                "x": -4.84446659741397,
+                "y": 0.3025775954768831,
+                "z": 0.8461137681639804
+            }
+        },
+        {
+            "id": 2,
+            "class": "tv",
+            "confidence": 0.6385822296142578,
+            "bbox": {
+                "x1": 0,
+                "y1": 0,
+                "x2": 164,
+                "y2": 151
+            },
+            "pixel_coords": {
+                "u": 82,
+                "v": 75
+            },
+            "depth_mm": 317,
+            "camera_coords": {
+                "x": -0.1762829268292683,
+                "y": -0.08504878048780488,
+                "z": 0.317
+            },
+            "chassis_coords": {
+                "x": -0.011165492887619755,
+                "y": -0.08504878048780488,
+                "z": 0.686388589585033
+            },
+            "global_coords": {
+                "x": -4.757674514550195,
+                "y": 0.37841356456165265,
+                "z": 0.686388589585033
+            }
+        }
+    ]
+}

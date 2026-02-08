@@ -39,3 +39,16 @@ https://blog.csdn.net/qq_41204464/article/details/148840225
 
 2.7
 整理了一下代码，重新给命名了，这样清晰一点。也用ai写了一份说明文档，方便后续查看
+
+2.8
+cluster_bojects.py实现对data数据集中的数据进行聚类
+# 假设您的 CSV 在 output 目录下
+python cluster_objects.py -i output/detection_results.csv
+
+query_vllm.py实现把本地数据json文件+请求发送到llm，然后接收llm的处理结果
+python query_vllm.py 直接运行脚本，不加任何参数，它会进入聊天模式，您可以连续提问，支持输入中文
+python query_vllm.py --target "笔记本电脑"
+
+发现0.6B的模型不太给力，直接用另一台机器上的8B模型，结果是没问题的
+
+剩下的就是安装相机，然后保证标定的数据没问题，布置简单场景（3个，椅子、瓶子、花瓶），采集rgbd图像数据
