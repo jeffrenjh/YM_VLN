@@ -1,5 +1,6 @@
 """
 测试脚本：使用 data 文件夹中的 RGBD 图像测试 YOLO 检测和坐标转换
+功能增强：添加全局坐标系转换
 """
 
 import cv2
@@ -43,6 +44,50 @@ def pixel_to_camera_coordinate(u, v, depth_mm, camera_intrinsics):
     z = depth_m
     
     return np.array([x, y, z])
+
+
+def chassis_to_global(chassis_coord, base_to_odom_trans=None, base_to_odom_yaw=None, 
+                      odom_to_map_trans=None, odom_to_map_yaw=None):
+    """
+    将底盘坐标系的坐标转换到全局坐标系（map）
+    
+    变换链: base_link -> odom -> map
+    
+    参数:
+        chassis_coord: numpy数组 [x, y, z] 底盘坐标系下的坐标
+        base_to_odom_trans: base_link到odom的平移向量 [x, y, z]，默认 [-5.270, -1.117, 0]
+        base_to_odom_yaw: base_link到odom的偏航角（弧度），默认 2.986
+        odom_to_map_trans: odom到map的平移向量 [x, y, z]，默认 [0.540, 1.102, 0]
+        odom_to_map_yaw: odom到map的偏航角（弧度），默认 -0.059
+    
+    返回:
+        全局坐标系下的坐标 [x, y, z]
+    """
+    # 使用默认TF参数（如果未提供）
+    if base_to_odom_trans is None:
+        base_to_odom_trans = np.array([-5.270, -1.117, 0.0])
+    if base_to_odom_yaw is None:
+        base_to_odom_yaw = 2.986
+    if odom_to_map_trans is None:
+        odom_to_map_trans = np.array([0.540, 1.102, 0.0])
+    if odom_to_map_yaw is None:
+        odom_to_map_yaw = -0.059
+    
+    # 第一步: base_link -> odom
+    cos_yaw1 = np.cos(base_to_odom_yaw)
+    sin_yaw1 = np.sin(base_to_odom_yaw)
+    x_odom = cos_yaw1 * chassis_coord[0] - sin_yaw1 * chassis_coord[1] + base_to_odom_trans[0]
+    y_odom = sin_yaw1 * chassis_coord[0] + cos_yaw1 * chassis_coord[1] + base_to_odom_trans[1]
+    z_odom = chassis_coord[2] + base_to_odom_trans[2]
+    
+    # 第二步: odom -> map
+    cos_yaw2 = np.cos(odom_to_map_yaw)
+    sin_yaw2 = np.sin(odom_to_map_yaw)
+    x_map = cos_yaw2 * x_odom - sin_yaw2 * y_odom + odom_to_map_trans[0]
+    y_map = sin_yaw2 * x_odom + cos_yaw2 * y_odom + odom_to_map_trans[1]
+    z_map = z_odom + odom_to_map_trans[2]
+    
+    return np.array([x_map, y_map, z_map])
 
 
 def get_default_camera_intrinsics():
@@ -117,6 +162,9 @@ def main():
     
     print(f"检测到 {len(detected_boxes)} 个目标")
     
+    # 存储检测结果
+    detection_results = []
+    
     # 处理每个检测到的目标
     for i, (box, class_id, conf) in enumerate(zip(detected_boxes, class_ids, confidences)):
         x1, y1, x2, y2 = map(int, box)
@@ -136,12 +184,42 @@ def main():
             # 将相机坐标系转换为小车底盘坐标系
             chassis_coord = calibration.camera_to_chassis(camera_coord)
             
+            # 将底盘坐标系转换为全局坐标系
+            global_coord = chassis_to_global(chassis_coord)
+            
             print(f"\n目标 {i+1}: {class_name} (置信度: {conf:.2f})")
             print(f"  边界框: ({x1}, {y1}) -> ({x2}, {y2})")
             print(f"  中心点像素坐标: ({ux}, {uy})")
             print(f"  深度值: {depth_value} mm ({depth_value/1000:.3f} m)")
             print(f"  相机坐标系: X={camera_coord[0]:.3f}m, Y={camera_coord[1]:.3f}m, Z={camera_coord[2]:.3f}m")
             print(f"  底盘坐标系: X={chassis_coord[0]:.3f}m, Y={chassis_coord[1]:.3f}m, Z={chassis_coord[2]:.3f}m")
+            print(f"  全局坐标系: X={global_coord[0]:.3f}m, Y={global_coord[1]:.3f}m, Z={global_coord[2]:.3f}m")
+            
+            # 保存检测结果
+            detection_result = {
+                'id': i + 1,
+                'class': class_name,
+                'confidence': float(conf),
+                'bbox': {'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2},
+                'pixel_coords': {'u': ux, 'v': uy},
+                'depth_mm': int(depth_value),
+                'camera_coords': {
+                    'x': float(camera_coord[0]),
+                    'y': float(camera_coord[1]),
+                    'z': float(camera_coord[2])
+                },
+                'chassis_coords': {
+                    'x': float(chassis_coord[0]),
+                    'y': float(chassis_coord[1]),
+                    'z': float(chassis_coord[2])
+                },
+                'global_coords': {
+                    'x': float(global_coord[0]),
+                    'y': float(global_coord[1]),
+                    'z': float(global_coord[2])
+                }
+            }
+            detection_results.append(detection_result)
             
             # 在图像上标注坐标信息
             cv2.circle(annotated_frame, (ux, uy), 4, (255, 255, 255), 5)
@@ -156,6 +234,12 @@ def main():
             chassis_text = f"Chassis: ({chassis_coord[0]:.2f}, {chassis_coord[1]:.2f}, {chassis_coord[2]:.2f})m"
             cv2.putText(annotated_frame, chassis_text, (ux + 20, uy + 30), 
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, [0, 255, 0], 
+                       thickness=1, lineType=cv2.LINE_AA)
+            
+            # 标注全局坐标系坐标
+            global_text = f"Global: ({global_coord[0]:.2f}, {global_coord[1]:.2f}, {global_coord[2]:.2f})m"
+            cv2.putText(annotated_frame, global_text, (ux + 20, uy + 50), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, [255, 0, 255], 
                        thickness=1, lineType=cv2.LINE_AA)
     
     # 显示结果
@@ -175,6 +259,29 @@ def main():
     output_path = os.path.join(project_dir, 'detection_result.jpg')
     cv2.imwrite(output_path, annotated_frame)
     print(f"\n结果已保存到: {output_path}")
+    
+    # 保存检测结果到JSON文件
+    json_output_path = os.path.join(project_dir, 'detection_result.json')
+    results_data = {
+        'source_images': {
+            'color': color_image_path,
+            'depth': depth_image_path
+        },
+        'camera_intrinsics': camera_intrinsics,
+        'calibration_params': {
+            'x': calibration.x,
+            'y': calibration.y,
+            'z': calibration.z,
+            'yaw': calibration.yaw,
+            'pitch': calibration.pitch,
+            'roll': calibration.roll
+        },
+        'detections': detection_results
+    }
+    
+    with open(json_output_path, 'w', encoding='utf-8') as f:
+        json.dump(results_data, f, indent=4, ensure_ascii=False)
+    print(f"检测结果已保存到: {json_output_path}")
     
     print("\n按任意键关闭窗口...")
     cv2.waitKey(0)
